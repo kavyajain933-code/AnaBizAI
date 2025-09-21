@@ -1,3 +1,4 @@
+/* static/style.css */
 :root {
     --bg-color: #000000;
     --card-bg-color: #111111;
@@ -304,7 +305,6 @@ button:hover {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Improved typography for the AI-generated report */
 .output-card h1, .output-card h2, .output-card h3 {
     color: var(--primary-gold);
     margin-top: 1.5em;
@@ -345,7 +345,6 @@ button:hover {
     font-family: monospace;
 }
 
-/* Style for the multi-file list */
 .file-list {
     margin-top: 15px;
     text-align: left;
@@ -376,30 +375,27 @@ button:hover {
     padding-right: 10px;
 }
 .remove-btn {
-    /* UPDATED: Background and text color from your image */
-    background: var(--gold-gradient); /* Matches the golden button */
-    color: #333; /* Darker color for visibility on gold */
+    background: var(--gold-gradient);
+    color: #333;
     border: none;
     border-radius: 50%;
     cursor: pointer;
-    /* UPDATED: Increased font-size to fill the button */
-    font-size: 1.2em; /* Made larger to fill the button */
+    font-size: 1.2em;
     font-weight: bold;
-    line-height: 1; /* Helps vertical centering */
-    width: 25px; /* Slightly larger button */
-    height: 25px; /* Slightly larger button */
-    display: flex; /* Use flexbox for perfect centering of the 'x' */
-    align-items: center; /* Center horizontally */
-    justify-content: center; /* Center vertically */
+    line-height: 1;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
-    transition: all 0.2s ease-in-out; /* Smooth transition for hover effects */
+    transition: all 0.2s ease-in-out;
 }
 .remove-btn:hover {
-    box-shadow: 0 0 10px var(--glow-color); /* Add a subtle glow on hover */
-    transform: scale(1.1); /* Slight enlarge on hover */
+    box-shadow: 0 0 10px var(--glow-color);
+    transform: scale(1.1);
 }
 
-/* Footer Styles */
 footer {
     text-align: center;
     padding: 40px 20px;
