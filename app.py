@@ -7,21 +7,28 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from PIL import Image
 import io
-from whitenoise import WhiteNoise # <--- ADDED
+from whitenoise import WhiteNoise
 
-# Load environment variables from .env file
+# Load environment variables for local development.
+# This line will be safely ignored on Render since no .env file exists there.
 load_dotenv()
+
 app = Flask(__name__)
-# ADDED THIS LINE TO ACTIVATE WHITENOISE
-app.wsgi_app = WhiteNoise(app.wsgi_app, root='static/', prefix='static/') 
-CORS(app) 
+
+# Configure WhiteNoise to serve static files.
+# This assumes your static folder is named 'static' and is in the same directory as this file.
+app.wsgi_app = WhiteNoise(app.wsgi_app, root='static/', prefix='static/')
+CORS(app)
 
 # --- Configure Generative AI ---
-try:
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-except KeyError:
-    print("🔴 FATAL ERROR: GEMINI_API_KEY not found. Make sure you have set it in your .env file.")
-    exit()
+# Use os.environ.get() to safely retrieve the API key without crashing if it's not found.
+api_key = os.environ.get("GEMINI_API_KEY")
+
+if api_key:
+    genai.configure(api_key=api_key)
+else:
+    # This warning will show up in your Render logs if the key isn't set.
+    print("🔴 Warning: GEMINI_API_KEY not found. API calls will fail.")
 
 # --- A dictionary to hold all our prompts ---
 ANALYSIS_PROMPTS = {
@@ -55,13 +62,18 @@ def analysis_page(analysis_type):
     if not config:
         return "Analysis type not found", 404
     
-    return render_template('analysis.html', 
-                           page_title=config['title'], 
-                           analysis_type=analysis_type)
+    return render_template('analysis.html',
+                            page_title=config['title'],
+                            analysis_type=analysis_type)
 
 # --- SINGLE API Endpoint for AI Generation ---
 @app.route('/api/generate', methods=['POST'])
 def generate_analysis():
+    # Check if API key is available before making the call.
+    # This will prevent the function from running and returning a clear error to the user.
+    if not api_key:
+        return jsonify({"error": "API key not configured. Please contact the administrator."}), 500
+
     files = request.files.getlist('files[]')
     
     if not files or files[0].filename == '':
@@ -91,7 +103,7 @@ def generate_analysis():
                 doc.close()
                 model_input.append(f"\n--- Content from {file.filename} ---\n{extracted_text}")
 
-            else: # Assume text file
+            else:  # Assume text file
                 extracted_text = file_bytes.decode('utf-8')
                 model_input.append(f"\n--- Content from {file.filename} ---\n{extracted_text}")
         
