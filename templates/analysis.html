@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }} - ANABIZAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</head>
+<body>
+    <div class="container">
+        <div class="app-header">
+            <h1 class="app-title">{{ page_title }}</h1>
+            <div id="analysis-meta" data-analysis-type="{{ analysis_type }}"></div>
+            <a href="/" class="back-link">← Back to Toolkit</a>
+        </div>
+        <div class="main-grid">
+            <div class="input-card">
+                <h2>1. Upload Your Documents</h2>
+                <div class="file-upload-area">
+                    <input type="file" id="fileInput" class="file-input" accept=".csv,.txt,.pdf,.png,.jpg,.jpeg" multiple>
+                    <label for="fileInput" class="file-label">
+                        <span>Click to browse or drag & drop</span>
+                        <small>Add documents like income statements, sales reports, or even screenshots. (PDF, TXT, CSV, PNG, JPG)</small>
+                    </label>
+                </div>
+                <div id="fileList" class="file-list">No files selected</div>
+                
+                <h2>2. Add Extra Context (Optional)</h2>
+                <textarea id="contextInput" class="context-textarea" placeholder="e.g., 'Focus on Q4 sales trends' or 'Compare the performance of Product A vs. Product B'"></textarea>
+
+                <h2>3. Generate Analysis</h2>
+                <div class="button-group">
+                    <button id="analyzeBtn">Generate {{ page_title }} Report</button>
+                </div>
+            </div>
+            <div class="output-card">
+                <div class="loader" id="loader"></div>
+                <div id="result"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
