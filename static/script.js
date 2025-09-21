@@ -1,7 +1,7 @@
 // static/script.js
 let uploadedFiles = [];
 let activeCharts = [];
-let generatedChartsData = []; // Store chart data for the explanation feature
+let generatedChartsData = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     const analyzeBtn = document.getElementById('analyzeBtn');
@@ -57,20 +57,22 @@ async function getAnalysis() {
     const resultDiv = document.getElementById('result');
     const explanationSection = document.getElementById('explanation-section');
     const analysisType = document.getElementById('analysis-meta').dataset.analysisType;
+    const contextInput = document.getElementById('contextInput');
 
-    // Reset UI for new analysis
+    // Reset UI
     loader.style.display = 'block';
     resultDiv.innerHTML = '';
     explanationSection.style.display = 'none';
     document.getElementById('explanation-result').innerHTML = '';
-    document.getElementById('charts-container').innerHTML = ''; // Clear old charts
+    document.getElementById('charts-container').innerHTML = '';
     activeCharts.forEach(chart => chart.destroy());
     activeCharts = [];
-    generatedChartsData = []; // Clear old chart data
+    generatedChartsData = [];
 
     const formData = new FormData();
     uploadedFiles.forEach(file => formData.append('files[]', file));
     formData.append('analysis_type', analysisType);
+    formData.append('context', contextInput.value);
 
     try {
         const response = await fetch(`/api/generate`, { method: 'POST', body: formData });
@@ -79,9 +81,9 @@ async function getAnalysis() {
         if (response.ok) {
             resultDiv.innerHTML = marked.parse(data.analysis_result);
             if (data.charts_data && data.charts_data.length > 0) {
-                generatedChartsData = data.charts_data; // Save chart data
+                generatedChartsData = data.charts_data;
                 renderCharts(generatedChartsData);
-                explanationSection.style.display = 'block'; // Show explanation prompt
+                explanationSection.style.display = 'block';
             }
         } else {
             resultDiv.innerHTML = `<p style="color: #f85149;">Error: ${data.error}</p>`;
@@ -137,7 +139,6 @@ function renderCharts(chartsData) {
 
     chartsData.forEach((chartData, index) => {
         const chartWrapper = document.createElement('div');
-        // This simple wrapper is what causes the 'slim' look, but it's what was there before.
         chartWrapper.style.marginBottom = '2rem';
         const title = document.createElement('h3');
         title.innerText = chartData.title;
@@ -152,7 +153,7 @@ function renderCharts(chartsData) {
             data: chartData.data,
             options: {
                 responsive: true,
-                maintainAspectRatio: true, // This contributes to the slim look in a narrow container
+                maintainAspectRatio: true,
                 plugins: { legend: { labels: { color: '#e0e0e0' } } },
                 scales: {
                     y: { 

@@ -23,28 +23,34 @@ if api_key:
 else:
     print("🔴 Warning: GEMINI_API_KEY not found. API calls will fail.")
 
-# --- SPECIFIC PROMPTS FOR EACH ANALYSIS TYPE ---
+# --- PROMPTS NOW INCLUDE A PLACEHOLDER FOR USER_CONTEXT ---
 PLANNING_PROMPTS = {
     "swot": """
-Act as a senior business strategist. First, perform a detailed SWOT analysis based on the provided documents. The analysis should be in Markdown and include at least 3-5 bullet points for each category (Strengths, Weaknesses, Opportunities, Threats).
+Act as a senior business strategist. First, perform a detailed SWOT analysis based on the provided documents. The analysis should be in Markdown and include at least 3-5 bullet points for each category.
+{user_context}
 
 After the text analysis, add the separator '---CHART_PLAN---'.
 
-Next, propose a JSON array of 2-3 charts to visualize the SWOT findings. For each chart, provide a 'title' and a 'prompt'. A good idea would be a bar chart counting the points in each category, and perhaps a radar chart to show the balance of the four categories.
+Next, propose a JSON array of 2-3 charts to visualize the SWOT findings. For each chart, provide a 'title' and a 'prompt'.
+IMPORTANT: For the 'prompt', you must only request standard chart types like 'bar', 'pie', 'doughnut', or 'radar'.
 """,
     "financial": """
-Act as an expert financial analyst. First, conduct a thorough financial analysis based on the provided documents (e.g., balance sheets, income statements). The analysis in Markdown should cover key areas like Revenue, Profitability, Liquidity, and Key Financial Ratios.
+Act as an expert financial analyst. First, conduct a thorough financial analysis based on the provided documents. The analysis in Markdown should cover key areas like Revenue, Profitability, and Key Financial Ratios.
+{user_context}
 
 After the text analysis, add the separator '---CHART_PLAN---'.
 
-Next, propose a JSON array of 3-4 highly relevant financial charts. For each chart, provide a 'title' and a 'prompt'. Examples include a pie chart for 'Revenue Composition', a bar chart for 'Profitability Trend (e.g., Gross vs. Net Profit)', and a line chart for 'Quarterly Revenue Growth'.
+Next, propose a JSON array of 3-4 highly relevant financial charts. For each chart, provide a 'title' and a 'prompt'.
+IMPORTANT: For the 'prompt', you must only request standard chart types like 'bar', 'line', 'pie', or 'doughnut'.
 """,
     "future": """
-Act as a forward-thinking growth consultant. First, create a "Future Planning" report in Markdown based on the provided documents. This report should outline 3-5 concrete, actionable strategic recommendations for the next business quarter, focusing on product, marketing, and operations.
+Act as a forward-thinking growth consultant. First, create a "Future Planning" report in Markdown based on the provided documents, outlining 3-5 actionable strategic recommendations.
+{user_context}
 
 After the text analysis, add the separator '---CHART_PLAN---'.
 
-Next, propose a JSON array of 2-3 charts to support your recommendations. For each chart, provide a 'title' and a 'prompt'. Good ideas include a doughnut chart showing the 'Impact vs. Effort' for your recommendations, or a timeline/roadmap visualization.
+Next, propose a JSON array of 2-3 charts to support your recommendations. For each chart, provide a 'title' and a 'prompt'.
+IMPORTANT: For the 'prompt', you must only request standard chart types like 'bar', 'line', 'pie', or 'doughnut'.
 """
 }
 
@@ -97,9 +103,17 @@ def generate_analysis():
     if not files or files[0].filename == '': return jsonify({"error": "No files selected."}), 400
 
     analysis_type = request.form.get('analysis_type')
-    planning_prompt = PLANNING_PROMPTS.get(analysis_type)
-    if not planning_prompt: return jsonify({"error": "Invalid analysis type."}), 400
+    user_context_text = request.form.get('context', '')
     
+    prompt_template = PLANNING_PROMPTS.get(analysis_type)
+    if not prompt_template: return jsonify({"error": "Invalid analysis type."}), 400
+    
+    context_for_prompt = ""
+    if user_context_text:
+        context_for_prompt = f"\nIMPORTANT: Please focus on the following request from the user: '{user_context_text}'\n"
+    
+    planning_prompt = prompt_template.format(user_context=context_for_prompt)
+
     try:
         model_input = process_files(files)
         model_input.insert(0, planning_prompt)
@@ -112,18 +126,15 @@ def generate_analysis():
             parts = planning_response.text.split('---CHART_PLAN---', 1)
             text_report = parts[0].strip()
             
-            # --- THIS IS THE FINAL, ROBUST FIX ---
-            # It finds the array (from '[' to ']') and ignores any mistakes around it.
             match = re.search(r'\[.*\]', parts[1], re.DOTALL)
             if match:
                 json_string = match.group(0)
                 try:
                     chart_plan = json.loads(json_string)
                 except json.JSONDecodeError:
-                    print("Error: Failed to parse the extracted JSON array from the AI plan.")
-                    text_report = planning_response.text # Fallback
+                    text_report = planning_response.text
             else:
-                text_report = planning_response.text # Fallback
+                text_report = planning_response.text
         else:
             text_report = planning_response.text
 
