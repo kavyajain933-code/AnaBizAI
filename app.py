@@ -7,10 +7,13 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from PIL import Image
 import io
+from whitenoise import WhiteNoise # <--- ADDED
 
 # Load environment variables from .env file
 load_dotenv()
 app = Flask(__name__)
+# ADDED THIS LINE TO ACTIVATE WHITENOISE
+app.wsgi_app = WhiteNoise(app.wsgi_app, root='static/', prefix='static/') 
 CORS(app) 
 
 # --- Configure Generative AI ---
@@ -95,7 +98,6 @@ def generate_analysis():
         full_prompt = f"{prompt_template}\n\nAdditional context from the user: '{user_context}'\n\nPlease analyze the following content from all the uploaded files:"
         model_input.insert(0, full_prompt)
 
-        # CORRECTED LINE: Changed GenerModel to GenerativeModel
         model = genai.GenerativeModel('gemini-1.5-pro-latest')
         response = model.generate_content(model_input)
         
